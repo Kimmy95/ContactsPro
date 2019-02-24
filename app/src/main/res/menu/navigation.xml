@@ -4,22 +4,23 @@
 
     <item
         android:id="@+id/search"
-        android:title="Search"
         android:icon="@drawable/ic_search"
-        app:showAsAction="ifRoom|collapseActionView"
-        app:actionViewClass="android.support.v7.widget.SearchView" />
+        android:title="Search"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:showAsAction="always"
+        />
 
     <item
         android:id="@+id/xxxx1"
         android:icon="@drawable/ic_home_black_24dp"
         android:title="xxxx1"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never"/>
 
     <item
         android:id="@+id/xxxx2"
         android:icon="@drawable/ic_dashboard_black_24dp"
         android:title="xxxx2"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/settings"

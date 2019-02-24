@@ -2,16 +2,16 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/tab_favourites"
-        android:icon="@drawable/ic_home_black_24dp"
+        android:icon="@drawable/favorite_icon_animation"
         android:title="Favourites" />
 
     <item
         android:id="@+id/tab_logs"
-        android:icon="@drawable/ic_dashboard_black_24dp"
+        android:icon="@drawable/ic_access_time_black_24dp"
         android:title="Logs" />
 
     <item
         android:id="@+id/tab_phoneBook"
-        android:icon="@drawable/ic_notifications_black_24dp"
+        android:icon="@drawable/ic_group_black_24dp"
         android:title="PhoneBook" />
 </menu>

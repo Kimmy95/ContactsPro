@@ -1,6 +1,6 @@
 package rivnam.akash.contactspro;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -17,7 +17,7 @@ public class Logs extends Fragment{
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        View view =null;//replace null with "inflater.inflate(R.layout.</log_layout_name/>, container, false)"
+        View view =inflater.inflate(R.layout.activity_logs, container, false);
         //Code goes here
 
         return view;
