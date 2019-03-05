@@ -1,13 +1,18 @@
 package rivnam.akash.contactspro;
 
 import android.Manifest;
+import android.app.IntentService;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -30,32 +35,41 @@ import com.oguzdev.circularfloatingactionmenu.library.FloatingActionButton;
 import com.oguzdev.circularfloatingactionmenu.library.FloatingActionMenu;
 import com.oguzdev.circularfloatingactionmenu.library.SubActionButton;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.READ_SMS;
+
 public class MainActivity extends AppCompatActivity {
 
-    AppDatabaseHandler db;
-    private SQLiteHelper dbHelper=new SQLiteHelper(MainActivity.this);
+    Intent databasePopulateService,logDatabasePopulateService;
     View shadowView;
+    FloatingActionMenu actionMenu;
+    SearchView searchView;
+    private static final int DPS_JOB_ID = 1000;
+    private static final int LDPS_JOB_ID = 1001;
+    static int number_of_request=0;
 
+    SearchAdapter searchAdapter;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        getPermission();
 
-        db=new AppDatabaseHandler(this);
-        Cursor cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,null, null, null);
-        String name="",number="",status="YES";
-        if(cursor.moveToLast()) {
-            do{
-                name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                number = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                db.addContact(new PhoneBookPojo(name, number,null,null, status,null));
-            }while (cursor.moveToPrevious());
+        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+                && ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED)
+        {
+            databasePopulateService=new Intent();
+            databasePopulateService.putExtra("attachString","secondrun");
+            DatabasePopulateService.enqueueWork(getApplicationContext(),DatabasePopulateService.class,DPS_JOB_ID,databasePopulateService);
+            logDatabasePopulateService=new Intent();
+            logDatabasePopulateService.putExtra("attachString","secondrun");
+            LogDatabasePopulateService.enqueueWork(getApplicationContext(),LogDatabasePopulateService.class,LDPS_JOB_ID,logDatabasePopulateService);
         }
-        cursor.close();
-
-
 
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
@@ -63,13 +77,11 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(tool_bar);
         shadowView=(View)findViewById(R.id.shadow_view);
 
-
-
         final ImageView icon = new ImageView(this);
         icon.setImageResource(R.drawable.ic_settings_black_24dp);
         final FloatingActionButton actionButton = new FloatingActionButton.Builder(this).setContentView(icon).build();
-        FrameLayout.LayoutParams layoutParams=new FrameLayout.LayoutParams(180, 180);
-        layoutParams.setMargins(0,0,20,170);
+        FrameLayout.LayoutParams layoutParams=new FrameLayout.LayoutParams(200, 200);
+        layoutParams.setMargins(0,0,30,190);
         actionButton.setPosition(4, layoutParams);
         final FabView add_contact = new FabView(this);
         add_contact.setIcon(R.drawable.ic_person_add_black_24dp);
@@ -80,11 +92,14 @@ public class MainActivity extends AppCompatActivity {
         FabView dialpad = new FabView(this);
         dialpad.setIcon(R.drawable.ic_dialpad_black_24dp);
         dialpad.setText("Dialpad");
-        final FloatingActionMenu actionMenu = new FloatingActionMenu.Builder(this).addSubActionView(add_contact).addSubActionView(ask_sim).addSubActionView(dialpad).attachTo(actionButton).setRadius(350).setStartAngle(180).setEndAngle(255).build();
+        actionMenu = new FloatingActionMenu.Builder(this).addSubActionView(add_contact).addSubActionView(ask_sim).addSubActionView(dialpad).attachTo(actionButton).setRadius(350).setStartAngle(180).setEndAngle(255).build();
 
+        displaySelectedScreen(0);
         actionMenu.setStateChangeListener(new FloatingActionMenu.MenuStateChangeListener() {
             @Override
             public void onMenuOpened(FloatingActionMenu floatingActionMenu) {
+                searchView.onActionViewCollapsed();
+                displaySelectedScreen(Constants.frameBeforeSearch);
                 shadowView.setVisibility(View.VISIBLE);
                 icon.setImageResource(R.drawable.ic_cancel_black_24dp);
             }
@@ -112,30 +127,44 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this, "Dialpad", Toast.LENGTH_SHORT).show();
             }
         });
-
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.navigation, menu);
 
         MenuItem searchItem = menu.findItem(R.id.search);
-        SearchView searchView =(SearchView) searchItem.getActionView();
-        searchItem.setIcon(R.drawable.ic_search);
-
-        // Configure the search info and add any event listeners...
-        MenuItem.OnActionExpandListener expandListener = new MenuItem.OnActionExpandListener() {
+        searchView =(SearchView) searchItem.getActionView();
+        searchView.setQueryHint("Search contact..");
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
             @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
-                // Do something when action item collapses
-                return true;  // Return true to collapse action view
+            public void onClick(View v) {
+                displaySelectedScreen(3);
+                actionMenu.close(true);
+                Constants.query="";
             }
-
+        });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
-                // Do something when expanded
-                return true;  // Return true to expand action view
+            public boolean onQueryTextSubmit(String query) {
+                Constants.query=query;
+                displaySelectedScreen(3);
+                return false;
             }
-        };
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Constants.query=newText;
+                displaySelectedScreen(3);
+                return false;
+            }
+        });
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                displaySelectedScreen(Constants.frameBeforeSearch);
+                return false;
+            }
+        });
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -144,48 +173,41 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.xxxx1:
-                // User chose the "xxxx1" action, mark the current item
-                // as a xxxx1...
+                Toast.makeText(getApplicationContext(),"hi",Toast.LENGTH_SHORT).show();
                 return true;
-
-            case R.id.xxxx2:
-                // User chose the "xxxx2" action, mark the current item
-                // as a xxxx2...
+            case R.id.theme:
                 return true;
-
             case R.id.settings:
-                // User chose the "Settings" item, show the app settings UI...
                 return true;
-
             default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
-
         }
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
-
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.tab_favourites:
+                    searchView.onActionViewCollapsed();
+                    Constants.frameBeforeSearch=0;
                     displaySelectedScreen(0);
                     return true;
                 case R.id.tab_logs:
+                    searchView.onActionViewCollapsed();
+                    Constants.frameBeforeSearch=1;
                     displaySelectedScreen(1);
                     return true;
                 case R.id.tab_phoneBook:
+                    searchView.onActionViewCollapsed();
+                    Constants.frameBeforeSearch=2;
                     displaySelectedScreen(2);
                     return true;
             }
             return false;
         }
     };
-
-
 
     public void displaySelectedScreen(int item) {
         Fragment fragment = null;
@@ -200,6 +222,9 @@ public class MainActivity extends AppCompatActivity {
             case 2:
                 fragment=new PhoneBook();
                 break;
+            case 3:
+                fragment=new SearchResult();
+                break;
         }
         if (fragment!=null) {
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -212,17 +237,57 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void askForPermission(String permission, Integer requestCode) {
-        if (ContextCompat.checkSelfPermission(MainActivity.this, permission) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this, permission)) {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{permission}, requestCode);
-            } else {
-                ActivityCompat.requestPermissions(MainActivity.this, new String[]{permission}, requestCode);
-            }
+    private void getPermission()
+    {
+        String permission[]={Manifest.permission.READ_CONTACTS,
+                Manifest.permission.READ_CALL_LOG,
+                Manifest.permission.WRITE_CONTACTS,
+                Manifest.permission.CALL_PHONE,
+                Manifest.permission.SEND_SMS};
+        if (ContextCompat.checkSelfPermission(MainActivity.this, permission[0]) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, permission[1]) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, permission[2]) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, permission[3]) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, permission[4]) != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(MainActivity.this, permission, 0x1);
         }
-        /*if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            askForPermission(Manifest.permission.ACCESS_FINE_LOCATION, 0x1);*/
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        int index = 0;
+        Map<String, Integer> PermissionsMap = new HashMap<String, Integer>();
+        for (String permission : permissions){
+            PermissionsMap.put(permission, grantResults[index]);
+            index++;
+        }
+        if((PermissionsMap.get(Manifest.permission.READ_CONTACTS) == 0)
+                && PermissionsMap.get(Manifest.permission.READ_CALL_LOG) == 0){
+            databasePopulateService=new Intent();
+            databasePopulateService.putExtra("attachString","firstrun");
+            DatabasePopulateService.enqueueWork(getApplicationContext(),DatabasePopulateService.class,DPS_JOB_ID,databasePopulateService);
+            logDatabasePopulateService=new Intent();
+            logDatabasePopulateService.putExtra("attachString","firstrun");
+            LogDatabasePopulateService.enqueueWork(getApplicationContext(),LogDatabasePopulateService.class,LDPS_JOB_ID,logDatabasePopulateService);
+        }
+        else
+        {
+            Toast.makeText(this, "Contact and Phone permissions required", Toast.LENGTH_SHORT).show();
+            if(number_of_request<3) {
+                getPermission();
+            }
+            else
+            {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    finishAndRemoveTask();
+                }
+                else
+                {
+                    finish();
+                }
+            }
 
+        }
+    }
 }

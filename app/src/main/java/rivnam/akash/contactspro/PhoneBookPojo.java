@@ -15,6 +15,13 @@ public class PhoneBookPojo {
 
     public PhoneBookPojo(){}
 
+    public PhoneBookPojo(String name, String number, String status)
+    {
+        this.Name=name;
+        this.Number=number;
+        this.Status=status;
+    }
+
     public PhoneBookPojo(String name, String number, String email, String type, String status, String address)
     {
         this.Name=name;

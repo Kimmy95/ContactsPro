@@ -17,9 +17,9 @@
         app:showAsAction="never"/>
 
     <item
-        android:id="@+id/xxxx2"
+        android:id="@+id/theme"
         android:icon="@drawable/ic_dashboard_black_24dp"
-        android:title="xxxx2"
+        android:title="Theme"
         app:showAsAction="never" />
 
     <item

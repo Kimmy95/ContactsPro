@@ -11,17 +11,17 @@ import android.widget.TextView;
 import java.util.List;
 
 /**
- * Created by Akash on 21-02-2019.
+ * Created by Akash on 25-02-2019.
  */
 
-public class PhoneBookAdapter extends BaseAdapter {
+public class SearchAdapter extends BaseAdapter{
 
     private Activity act;
     private LayoutInflater inflater;
     private List<PhoneBookPojo> pbList;
     private Context context;
 
-    public PhoneBookAdapter(Activity act, List<PhoneBookPojo> pbList) {
+    public SearchAdapter(Activity act, List<PhoneBookPojo> pbList) {
         this.act = act;
         this.pbList = pbList;
     }

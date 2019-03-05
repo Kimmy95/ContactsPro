@@ -6,6 +6,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/whatsapp_list"
-        android:scrollbars="vertical"/>
+        android:scrollbars="vertical"
+        android:scrollbarSize="7dp"
+        android:scrollbarFadeDuration="100"
+        android:paddingBottom="100dp"
+        android:clipToPadding="false"
+        android:divider="@null"
+        android:dividerHeight="0dp"/>
 
 </RelativeLayout>
