@@ -47,7 +47,8 @@ public class PhoneBook extends Fragment{
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-
+                Constants.whatsappCount=db.getWhatsappContactCount();
+                Constants.antiwhatsppCount=db.getAntiWhatsappContactCount();
                 tabLayout.getTabAt(0).setText("WAPP("+Constants.whatsappCount+")");
                 tabLayout.getTabAt(1).setText("OTHERS("+Constants.antiwhatsppCount+")");
                 displaySelectedScreen(tab.getPosition());
@@ -57,7 +58,8 @@ public class PhoneBook extends Fragment{
             }
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
-
+                Constants.whatsappCount=db.getWhatsappContactCount();
+                Constants.antiwhatsppCount=db.getAntiWhatsappContactCount();
                 tabLayout.getTabAt(0).setText("WAPP("+Constants.whatsappCount+")");
                 tabLayout.getTabAt(1).setText("OTHERS("+Constants.antiwhatsppCount+")");
                 displaySelectedScreen(tab.getPosition());

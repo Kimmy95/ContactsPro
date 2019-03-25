@@ -1,10 +1,15 @@
 package rivnam.akash.contactspro;
 
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -57,7 +62,11 @@ public class SearchResult extends Fragment{
                 searchArea.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Toast.makeText(getActivity(),"Call going to "+Constants.query,Toast.LENGTH_SHORT).show();
+                        if (ContextCompat.checkSelfPermission(v.getContext(), Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                            Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + Constants.query.trim()));
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            v.getContext().startActivity(intent);
+                        }
                     }
                 });
             }

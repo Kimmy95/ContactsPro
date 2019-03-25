@@ -1,10 +1,14 @@
 package rivnam.akash.contactspro;
 
+import android.Manifest;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.CallLog;
+import android.support.v4.app.ActivityCompat;
 import android.util.Pair;
 
 import java.util.ArrayList;
@@ -16,8 +20,9 @@ import java.util.List;
 
 public class LogDatabaseHandler {
     private SQLiteHelperForLog dbHelper;
+    Context context;
 
-    public LogDatabaseHandler(Context context){dbHelper=new SQLiteHelperForLog(context);}
+    public LogDatabaseHandler(Context context){dbHelper=new SQLiteHelperForLog(context);this.context=context;}
 
     int addSingleLogRecord(LogPojo lp)
     {
@@ -211,5 +216,24 @@ public class LogDatabaseHandler {
         db.delete(dbHelper.FAV_TABLE,dbHelper.Name+"= ?",new String[]{name});
         db.close();
         return 1;
+    }
+
+    public List<PhoneBookPojo> showLastTenLog(){
+
+        SQLiteDatabase db=dbHelper.getWritableDatabase();
+        List<PhoneBookPojo> pbList=new ArrayList<PhoneBookPojo>();
+        String sqlquery="SELECT "+dbHelper.Name+","+dbHelper.Number+" FROM " + dbHelper.TABLE+" WHERE NOT "+dbHelper.Name+" ='' GROUP BY "+dbHelper.Name+" ORDER BY "+dbHelper.Calldate+" DESC LIMIT 10";
+        Cursor c=db.rawQuery(sqlquery,null);
+        if(c.moveToFirst())
+        {
+            do{
+                PhoneBookPojo pb=new PhoneBookPojo();
+                pb.setName(c.getString(0));
+                pb.setNumber(c.getString(1));
+                pbList.add(pb);
+            }while(c.moveToNext());
+        }
+        db.close();
+        return pbList;
     }
 }

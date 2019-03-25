@@ -136,6 +136,25 @@ public class AppDatabaseHandler {
         return rows;
     }
 
+    public PhoneBookPojo fetchContactDetails(String name, String number)
+    {
+        SQLiteDatabase db=dbHelper.getWritableDatabase();
+        PhoneBookPojo pb=new PhoneBookPojo();
+        String sqlquery="SELECT * FROM " + dbHelper.TABLE+" WHERE "+dbHelper.Name+"='"+name+"' AND "+dbHelper.Number+"='"+number+"'";
+        Cursor c=db.rawQuery(sqlquery,null);
+        if(c.moveToFirst())
+        {
+                pb.setName(c.getString(0));
+                pb.setNumber(c.getString(1));
+                pb.setEmail(c.getString(2));
+                pb.setType(c.getString(3));
+                pb.setStatus(c.getString(4));
+                pb.setAddress(c.getString(5));
+        }
+        db.close();
+        return pb;
+    }
+
     public int isContactPresent(String name, String number)
     {
         SQLiteDatabase db=dbHelper.getReadableDatabase();
@@ -186,7 +205,13 @@ public class AppDatabaseHandler {
 
         SQLiteDatabase db=dbHelper.getWritableDatabase();
         List<PhoneBookPojo> pbList=new ArrayList<PhoneBookPojo>();
-        String sqlquery="SELECT  * FROM " + dbHelper.FTS_TABLE+" WHERE "+dbHelper.Number+" MATCH '*"+query+"*' ORDER BY "+dbHelper.Name+" COLLATE NOCASE";
+        String processedQuery="";
+        for(int i=0;i<query.length()-1;i++)
+        {
+            processedQuery=processedQuery+String.valueOf(query.charAt(i))+"*";
+        }
+        processedQuery=processedQuery+String.valueOf(query.charAt(query.length()-1));
+        String sqlquery="SELECT  * FROM " + dbHelper.FTS_TABLE+" WHERE "+dbHelper.Number+" MATCH '*"+query+"*' AND NOT "+dbHelper.Name+"='' ORDER BY "+dbHelper.Name+" COLLATE NOCASE LIMIT 10";
         Cursor c=db.rawQuery(sqlquery,null);
         if(c.moveToFirst())
         {

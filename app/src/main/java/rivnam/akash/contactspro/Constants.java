@@ -1,5 +1,7 @@
 package rivnam.akash.contactspro;
 
+import android.widget.TextView;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,4 +17,8 @@ public class Constants {
     static int frameBeforeSearch=0;
     static List<PhoneBookPojo> searchList=new ArrayList<PhoneBookPojo>();
     static String query="";
+    static String numQuery="";
+    static int simNumber=3;
 }
+
+

@@ -34,6 +34,7 @@ public class WhatsApp extends Fragment {
         pbList=db.showWhatsappContact();
         ad=new PhoneBookAdapter(this.getActivity(),pbList);
         lView.setAdapter(ad);
+        PhoneBookPojo list=new PhoneBookPojo();
 
         return view;
     }
